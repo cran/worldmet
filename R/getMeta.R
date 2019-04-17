@@ -1,10 +1,13 @@
 ##' Get information on meteorological sites
 ##'
-##' This function is primarily used to find a site code that can be
-##' used to access data using \code{\link{importNOAA}}. Sites searches
-##' of approximately 30,000 sites can be carried out based on the site
-##' name and based on the nearest locations based on user-supplied
-##' latitude and logitude.
+##' This function is primarily used to find a site code that can be used to
+##' access data using \code{\link{importNOAA}}. Sites searches of approximately
+##' 30,000 sites can be carried out based on the site name and based on the
+##' nearest locations based on user-supplied latitude and logitude.
+##'
+##' See also \code{\link{getMetaLive}} to download the all meta data to allow
+##' re-use and direct querying.
+##' 
 ##' @title Find a ISD site code and other meta data
 ##' @param site A site name search string e.g. \code{site =
 ##'   "heathrow"}. The search strings and be partial and can be upper
@@ -28,10 +31,6 @@
 ##'   current year are returned}.
 ##' @param plot If \code{TRUE} will plot sites on an interactive
 ##'   leaflet map.
-##' @param fresh Should the meta data be read from the NOAA server or
-##'   the \code{worldmet} package?. If \code{FALSE} it is read from
-##'   the package version, which is fast but might be out of date. If
-##'   \code{TRUE} the data are read from the NOAA server.
 ##' @param returnMap Should the leaflet map be returned instead of the
 ##'   meta data? Default is \code{FALSE}.
 ##' @return A data frame is returned with all available meta data,
@@ -55,11 +54,11 @@
 ##' }
 getMeta <- function(site = "heathrow", lat = NA, lon = NA,
                     country = NA, state = NA, n = 10, end.year = "current",
-                    plot = TRUE, fresh = TRUE, returnMap = FALSE) {
+                    plot = TRUE, returnMap = FALSE) {
   ## read the meta data
 
   ## download the file, else use the package version
-  if (fresh) meta <- getMetaLive()
+  meta <- getMetaLive()
 
   # check year
   if (!any(end.year %in% c("current", "all"))) {
@@ -138,7 +137,8 @@ getMeta <- function(site = "heathrow", lat = NA, lon = NA,
 
     m <- leaflet(dat) %>%
       addTiles() %>%
-      addMarkers(~ longitude, ~ latitude, popup = content)
+      addMarkers(~ longitude, ~ latitude, popup = content,
+                 clusterOptions = markerClusterOptions())
 
     if (!is.na(lat) && !is.na(lon)) {
       m <- m %>% addCircles(
@@ -159,13 +159,44 @@ getMeta <- function(site = "heathrow", lat = NA, lon = NA,
   if (returnMap) return(m) else return(dat)
 }
 
+
+#' Obtain site meta data from NOAA server
+#'
+#' @param ... Currently unused.
+#'
+#' @return A tibble with meta data.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' meta <- getMetaLive()
+#' head(meta)
+#' }
 getMetaLive <- function(...) {
 
   ## downloads the whole thing fresh
 
   url <- "https://www1.ncdc.noaa.gov/pub/data/noaa/isd-history.csv"
-  meta <- suppressMessages(read_csv(url, skip = 21, col_names = FALSE))
+  meta <- suppressMessages(read_csv(url, skip = 21, col_names = FALSE,
+                                    col_types = cols(
+                                      X1 = col_character(),
+                                      X2 = col_character(),
+                                      X3 = col_character(),
+                                      X4 = col_character(),
+                                      X5 = col_character(),
+                                      X6 = col_character(),
+                                      X7 = col_double(),
+                                      X8 = col_double(),
+                                      X9 = col_double(),
+                                      X10 = col_date(format = "%Y%m%d"),
+                                      X11 = col_date(format = "%Y%m%d")
+                                    )))
 
+  # if not available e.g. due to US Government shutdown, flag and exit
+  # some header data may still be read, so check column number
+  if (ncol(meta) == 1L) 
+    stop("File not available, check \nhttps://www1.ncdc.noaa.gov/pub/data/noaa/ for potential server problems.", call. = FALSE)
+  
   ## names in the meta file
   names(meta) <- c(
     "USAF", "WBAN", "STATION", "CTRY", "ST", "CALL", "LAT",
@@ -175,11 +206,7 @@ getMetaLive <- function(...) {
   ## full character string of site id
   meta$USAF <- formatC(meta$USAF, width = 6, format = "d", flag = "0")
 
-  ## start/end date of measurements
-  meta$BEGIN <- as.Date(as.character(meta$BEGIN), format = "%Y%m%d")
-  meta$END <- as.Date(as.character(meta$END), format = "%Y%m%d")
-
-  ## code used to query data
+   ## code used to query data
   meta$code <- paste(meta$USAF, meta$WBAN, sep = "-")
 
   return(meta)

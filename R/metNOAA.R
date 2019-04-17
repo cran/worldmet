@@ -85,12 +85,14 @@
 ##' @param parallel Should the importing use mutiple processors? By default the
 ##'   number of cores - 1 are used.
 ##' @param quiet If FALSE, print missing sites / years to the screen.
+##' @param path If a file path is provided, the data are saved as an rds file at 
+##' the chosen location e.g.  \code{path = "C:/Users/David"}. Files are saved by year and site.
 ##' @export
 ##' @import openair
 ##' @import readr
 ##' @import doParallel parallel foreach dplyr
 ##' @importFrom utils head write.table download.file
-##' @importFrom leaflet addCircles addMarkers addTiles leaflet
+##' @importFrom leaflet addCircles addMarkers addTiles leaflet markerClusterOptions
 ##' @return Returns a data frame of surface observations. The data frame is
 ##'   consistent for use with the \code{openair} package. NOTE! the data are
 ##'   returned in GMT (UTC) time zone format. Users may wish to express the data
@@ -106,7 +108,7 @@
 ##' }
 importNOAA <- function(code = "037720-99999", year = 2014,
                        hourly = TRUE, precip = FALSE, PWC = FALSE,
-                       parallel = TRUE, quiet = FALSE) {
+                       parallel = TRUE, quiet = FALSE, path = NA) {
 
   ## main web site https://www.ncdc.noaa.gov/isd
 
@@ -168,6 +170,25 @@ importNOAA <- function(code = "037720-99999", year = 2014,
   if (length(which(is.na(actual$date))) > 0 && !quiet) {
     print("The following sites / years are missing:")
     print(filter(actual, is.na(date)))
+  }
+  
+  if (!is.na(path)) {
+    
+    if (!dir.exists(path)) {
+      
+      warning("Directory does not exist, file not saved", call. = FALSE)
+      return()
+    }
+    
+    # save as year / site files
+    writeMet <- function(dat) {
+      saveRDS(dat, paste0(path, "/", unique(dat$code), "_", unique(dat$year), ".rds"))
+      return(dat)
+    }
+    
+    mutate(dat, year = format(date, "%Y")) %>% 
+      group_by(code, year) %>% 
+      do(writeMet(.))
   }
 
   return(dat)
@@ -240,7 +261,7 @@ getDat <- function(code, year, hourly, precip, PWC) {
 
   ## Correct the visibility values
   dat$visibility <-
-    ifelse(dat$visibility == 999999, NA, dat$visibility)
+    ifelse(dat$visibility %in% c(9999, 999999), NA, dat$visibility)
 
   ## Correct the dew point values
   dat$dew_point <-

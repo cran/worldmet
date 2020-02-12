@@ -2,8 +2,8 @@ Package: worldmet
 Type: Package
 Title: Import Surface Meteorological Data from NOAA Integrated Surface
         Database (ISD)
-Version: 0.8.7
-Date: 2019-04-17
+Version: 0.8.8
+Date: 2020-02-12
 Authors@R: c(person("David", "Carslaw", role = c("aut", "cre"), email =
     "david.carslaw@york.ac.uk"))
 ByteCompile: true
@@ -20,9 +20,9 @@ BugReports: http://github.com/davidcarslaw/worldmet/issues
 LazyLoad: true
 LazyData: true
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 NeedsCompilation: no
-Packaged: 2019-04-17 08:05:15 UTC; davidcarslaw
+Packaged: 2020-02-12 13:08:02 UTC; davidcarslaw
 Author: David Carslaw [aut, cre]
 Repository: CRAN
-Date/Publication: 2019-04-17 08:20:03 UTC
+Date/Publication: 2020-02-12 13:50:02 UTC

@@ -120,16 +120,18 @@ getMeta <- function(site = "heathrow", lat = NA, lon = NA,
     meta <- head(openair:::sortDataFrame(meta, key = "dist"), n)
   }
 
-  dat <- dplyr::rename(meta, latitude = LAT, longitude = LON)
+  dat <- rename(meta, latitude = LAT, longitude = LON)
+  
+  names(dat) <- tolower(names(dat))
 
   if (plot) {
     if (!"dist" %in% names(dat)) dat$dist <- NA
 
     content <- paste(paste(
-      dat$STATION,
+      dat$station,
       paste("Code:", dat$code),
-      paste("Start:", dat$BEGIN),
-      paste("End:", dat$END),
+      paste("Start:", dat$begin),
+      paste("End:", dat$end),
       paste("Distance (km)", round(dat$dist, 1)),
       sep = "<br/>"
     ))
@@ -146,8 +148,8 @@ getMeta <- function(site = "heathrow", lat = NA, lon = NA,
         stroke = TRUE, color = "red",
         popup = paste(
           "Search location",
-          paste("Lat =", lat),
-          paste("Lon =", lon),
+          paste("Lat =", latitude),
+          paste("Lon =", longitude),
           sep = "<br/>"
         )
       )
@@ -176,7 +178,7 @@ getMetaLive <- function(...) {
 
   ## downloads the whole thing fresh
 
-  url <- "https://www1.ncdc.noaa.gov/pub/data/noaa/isd-history.csv"
+  url <- "ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv"
   meta <- suppressMessages(read_csv(url, skip = 21, col_names = FALSE,
                                     col_types = cols(
                                       X1 = col_character(),
@@ -207,7 +209,7 @@ getMetaLive <- function(...) {
   meta$USAF <- formatC(meta$USAF, width = 6, format = "d", flag = "0")
 
    ## code used to query data
-  meta$code <- paste(meta$USAF, meta$WBAN, sep = "-")
+  meta$code <- paste0(meta$USAF, "-", meta$WBAN)
 
   return(meta)
 }

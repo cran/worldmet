@@ -39,6 +39,7 @@
 ##'   are made an approximate distance, \code{dist} in km is also
 ##'   returned.
 ##' @export
+##' @importFrom dplyr `%>%`
 ##' @author David Carslaw
 ##' @examples
 ##'
@@ -148,8 +149,8 @@ getMeta <- function(site = "heathrow", lat = NA, lon = NA,
         stroke = TRUE, color = "red",
         popup = paste(
           "Search location",
-          paste("Lat =", latitude),
-          paste("Lon =", longitude),
+          paste("Lat =", dat$latitude),
+          paste("Lon =", dat$longitude),
           sep = "<br/>"
         )
       )

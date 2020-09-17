@@ -4,7 +4,7 @@
 ##' Database (ISD). The ISD contains detailed surface meteorological data from
 ##' around the world for over 30,000 locations. For general information of the
 ##' ISD see \url{https://www.ncdc.noaa.gov/isd} and the map here
-##' \url{https://gis.ncdc.noaa.gov/map/viewer/#app=cdo&cfg=cdo&theme=hourly&layers=1}.
+##' \url{https://gis.ncdc.noaa.gov/maps/ncei}.
 ##'
 ##' Note the following units for the main variables:
 ##'
@@ -89,9 +89,11 @@
 ##' @import readr
 ##' @import tidyr
 ##' @import doParallel parallel foreach dplyr
+##' @importFrom purrr pmap_dfr
 ##' @importFrom utils head write.table download.file
 ##' @importFrom leaflet addCircles addMarkers addTiles leaflet
 ##'   markerClusterOptions
+##' @importFrom dplyr `%>%`
 ##' @return Returns a data frame of surface observations. The data frame is
 ##'   consistent for use with the \code{openair} package. NOTE! the data are
 ##'   returned in GMT (UTC) time zone format. Users may wish to express the data
@@ -146,10 +148,9 @@ importNOAA <- function(code = "037720-99999", year = 2014,
 
     stopCluster(cl)
   } else {
-    dat <- rowwise(site_process) %>%
-      summarise(getDat(
-        year = .data$year, code = .data$code, hourly = hourly
-      ))
+    
+    dat <- pmap_dfr(site_process, getDat, hourly = hourly)
+    
   }
 
   if (is.null(dat)) {
@@ -432,7 +433,7 @@ getDat <- function(code, year, hourly) {
       sep = ",", fill = "right"
     )
 
-    dat <- left_join(dat, weatherCodes, by = "pwc")
+    dat <- left_join(dat, worldmet::weatherCodes, by = "pwc")
     dat <- select(dat, -pwc) %>%
       rename(pwc = description)
   }

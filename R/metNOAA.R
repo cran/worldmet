@@ -47,13 +47,14 @@
 ##' \item{cl_1_height, ..., cl_3_height}{Height of the cloud base for each later
 ##' in metres.}
 ##'
-##' \item{precip_12}{12-hour precipitation in mm.}
+##' \item{precip_12}{12-hour precipitation in mm. The sum of this column should
+##' give the annual precipitation.}
 ##'
 ##' \item{precip_6}{6-hour precipitation in mm.}
 ##'
-##' \item{precip}{Based on the 12 hourly and 6 hourly totals, \code{precip}}
-##' spreads the 6-hourly totals across the previous 6-hours to provide an
-##' indication of hourly precipitation.
+##' \item{precip}{This calue of precipitation spreads the 12-hour total across
+##' the previous 12 hours.}
+##'
 ##'
 ##' \item{pwc}{The description of the present weather description (if
 ##' available).}
@@ -61,7 +62,7 @@
 ##' }
 ##'
 ##' The data are returned in GMT (UTC). It may be necessary to adjust the time
-##' zone when comining with other data. For example, if air quality data were
+##' zone when combining with other data. For example, if air quality data were
 ##' available for Beijing with time zone set to "Etc/GMT-8" (note the negative
 ##' offset even though Beijing is ahead of GMT. See the \code{openair} package
 ##' and manual for more details), then the time zone of the met data can be
@@ -97,7 +98,8 @@
 ##' @return Returns a data frame of surface observations. The data frame is
 ##'   consistent for use with the \code{openair} package. NOTE! the data are
 ##'   returned in GMT (UTC) time zone format. Users may wish to express the data
-##'   in other time zones e.g. to merge with air pollution data.
+##'   in other time zones e.g. to merge with air pollution data. The
+##'   \code{lubridate} package is useful in this respect.
 ##' @seealso \code{\link{getMeta}} to obtain the codes based on various site
 ##'   search approaches.
 ##' @author David Carslaw
@@ -374,13 +376,14 @@ getDat <- function(code, year, hourly) {
   # PRECIP AA1
   if ("AA1" %in% names(dat)) {
     dat <- separate(dat, AA1,
-      into = c("precip_code", "precip", "code_1", "code_2"),
+      into = c("precip_code", "precip_raw", "code_1", "code_2"),
       sep = ","
     )
 
     dat <- mutate(dat,
-      precip = as.numeric(precip),
-      precip = ifelse(precip == 9999, NA, precip)
+      precip_raw = as.numeric(precip_raw),
+      precip_raw = ifelse(precip_raw == 9999, NA, precip_raw),
+      precip_raw = precip_raw / 10
     )
 
     # deal with 6 and 12 hour precip
@@ -388,42 +391,14 @@ getDat <- function(code, year, hourly) {
 
     if (length(id) > 0) {
       dat$precip_6 <- NA
-      dat$precip_6[id] <- dat$precip[id]
+      dat$precip_6[id] <- dat$precip_raw[id]
     }
 
     id <- which(dat$precip_code == "12")
 
     if (length(id) > 0) {
       dat$precip_12 <- NA
-      dat$precip_12[id] <- dat$precip[id]
-    }
-  }
-
-  ## add precipitation
-
-  ## spread out precipitation across each hour
-  ## met data gives 12 hour total and every other 6 hour total
-
-  ## only do this if precipitation exists
-  if (all(c("precip_6", "precip_12") %in% names(dat))) {
-
-    ## make new precip variable
-    dat$precip <- NA
-
-    ## id where there is 6 hour data
-    id <- which(!is.na(dat$precip_6))
-    id <- id[id < (nrow(dat) - 6)] ## make sure we don't run off end
-
-    ## calculate new 6 hour based on 12 hr total - 6 hr total
-    dat$precip_6[id + 6] <- dat$precip_12[id + 6] - dat$precip_6[id]
-
-    ## ids for new 6 hr totals
-    id <- which(!is.na(dat$precip_6))
-    id <- id[id > 6]
-
-    ## Divide 6 hour total over each of 6 hours
-    for (i in seq_along(id)) {
-      dat$precip[(id[i] - 5):id[i]] <- dat$precip_6[id[i]] / 6
+      dat$precip_12[id] <- dat$precip_raw[id]
     }
   }
 
@@ -475,7 +450,29 @@ getDat <- function(code, year, hourly) {
     dat <- left_join(dat, pwc, by = "date", all = TRUE)
   }
 
+  ## add precipitation - based on 12 HOUR averages, so work with hourly data
 
+  ## spread out precipitation across each hour
+
+  ## only do this if precipitation exists
+  if ("precip_12" %in% names(dat) && hourly) {
+
+    ## make new precip variable
+    dat$precip <- NA
+
+    ## id where there is 12 hour data
+    id <- which(!is.na(dat$precip_12))
+
+    if (length(id) == 0L) {
+      return()
+    }
+
+    id <- id[id > 11] ## make sure we don't run off beginning
+
+    for (i in seq_along(id)) {
+      dat$precip[(id[i] - 11):id[i]] <- dat$precip_12[id[i]] / 12
+    }
+  }
 
   # replace NaN with NA
   dat[] <- lapply(dat, function(x) {

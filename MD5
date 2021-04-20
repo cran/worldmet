@@ -1,7 +1,7 @@
-6246f8add95fb4e75f3746a5d764ab6f *DESCRIPTION
+a6cace4f91023141efa3e05e50f68435 *DESCRIPTION
 f96925748623fd49a5aac2040758b5f0 *NAMESPACE
 4bb7269eb221f78728a0cb4d98a3006d *R/exportADMS.R
-56195dceaa83fb6362347df4d54dc2f0 *R/getMeta.R
+d3518b18a54f143daf42d444ecf79290 *R/getMeta.R
 cad2e2b073a111cb6c9d7e14793e5fb4 *R/metNOAA.R
 dfd79efabee5ea65b0ee279b9f8330de *R/weatherCodes.R
 4e12ca3ac9d10c32df1323a551b5a349 *R/worldmet-package.R
@@ -11,7 +11,7 @@ b180ead8dd8cc9b27765d4074096bc8b *R/zzz.R
 ca62b4153959d89af26f07cc4e2e1d32 *man/exportADMS.Rd
 84f21841c2bbb1c09c3ffbcf11ec2145 *man/figures/map.png
 ad127a8a1b6a6416125979c25b3389cc *man/figures/windRose-1.png
-93336f281eb907d084235732006103ef *man/getMeta.Rd
+e93ee436ce945d5a2e4f6c2ba47c56a0 *man/getMeta.Rd
 40c9a88ccb100f7fc94a4e3899406085 *man/getMetaLive.Rd
 464a0cd09947d856a62cbd103fdea7c2 *man/importNOAA.Rd
 033635944e83ba6b778f20d6c189adb2 *man/weatherCodes.Rd

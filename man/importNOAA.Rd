@@ -43,8 +43,7 @@ respect.
 \description{
 This is the main function to import data from the NOAA Integrated Surface
 Database (ISD). The ISD contains detailed surface meteorological data from
-around the world for over 30,000 locations. For general information of the
-ISD see website.
+around the world for over 30,000 locations.
 }
 \details{
 Note the following units for the main variables:

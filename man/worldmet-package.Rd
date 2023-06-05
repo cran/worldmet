@@ -6,7 +6,7 @@
 \alias{worldmet-package}
 \title{worldmet: Import Surface Meteorological Data from NOAA Integrated Surface Database (ISD)}
 \description{
-Functions to import data from more than 30,000 surface meteorological sites around the world managed by the National Oceanic and Atmospheric Administration (NOAA) Integrated Surface Database.
+Functions to import data from more than 30,000 surface meteorological sites around the world managed by the National Oceanic and Atmospheric Administration (NOAA) Integrated Surface Database (ISD).
 }
 \details{
 This package contains functions to import surface meteorological
@@ -21,7 +21,7 @@ These data work well with the \code{openair} package that has been developed to
 analyse air pollution data.
 }
 \references{
-For general information of the ISD see website.
+Search for NOAA ISD for more information.
 }
 \seealso{
 See \url{https://github.com/davidcarslaw/openair} for information on the

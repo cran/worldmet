@@ -65,6 +65,19 @@ getMeta <- function(site = "heathrow",
   ## read the meta data
   
   ## download the file, else use the package version
+  # check if url works and exit gracefully if not
+  
+  # function to fail gracefully if url is down / moved etc.
+  not_working <- function(url = "https://www1.ncdc.noaa.gov/pub/data/noaa/isd-history.csv"){
+    test <- try(suppressWarnings(readLines(url, n = 1)), silent = TRUE)
+    inherits(test, "try-error")
+  }
+  
+  if (not_working()) {
+    message("Meta data currently not available.")
+    return()
+    
+  }
   meta <- getMetaLive()
   
   # check year
@@ -284,3 +297,4 @@ getMetaLive <- function(...) {
 # meta <- getMeta(end.year = "all")
 # usethis::use_data(meta, overwrite = TRUE, internal = TRUE)
 # usethis::use_data(meta, overwrite = TRUE)
+

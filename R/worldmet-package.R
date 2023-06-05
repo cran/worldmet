@@ -11,7 +11,7 @@
 #'   These data work well with the `openair` package that has been developed to
 #'   analyse air pollution data.
 #'
-#' @references For general information of the ISD see website.
+#' @references Search for NOAA ISD for more information.
 #'
 #' @seealso See <https://github.com/davidcarslaw/openair> for information on the
 #'   related `openair` package.

@@ -11,9 +11,11 @@
 #'   These data work well with the `openair` package that has been developed to
 #'   analyse air pollution data.
 #'
-#' @references Search for NOAA ISD for more information.
+#' @references For general information of the ISD see
+#'   <https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database>
+#'    and the map here <https://gis.ncdc.noaa.gov/maps/ncei>.
 #'
-#' @seealso See <https://github.com/davidcarslaw/openair> for information on the
+#' @seealso See <https://github.com/openair-project/openair> for information on the
 #'   related `openair` package.
 "_PACKAGE"
 ## usethis namespace: start

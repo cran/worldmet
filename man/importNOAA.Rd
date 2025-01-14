@@ -26,7 +26,8 @@ separated by a \dQuote{-} e.g. \code{code = "037720-99999"}.}
 \item{n.cores}{Number of cores to use for parallel processing. Default is 1
 and hence no parallelism.}
 
-\item{quiet}{If FALSE, print missing sites / years to the screen.}
+\item{quiet}{If \code{FALSE}, print missing sites / years to the screen, and show a
+progress bar if multiple sites are imported.}
 
 \item{path}{If a file path is provided, the data are saved as an rds file at
 the chosen location e.g.  \code{path = "C:/Users/David"}. Files are saved by
@@ -43,7 +44,11 @@ respect.
 \description{
 This is the main function to import data from the NOAA Integrated Surface
 Database (ISD). The ISD contains detailed surface meteorological data from
-around the world for over 30,000 locations.
+around the world for over 30,000 locations. For general information of the
+ISD see
+\url{https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database}
+and the map here
+\url{https://gis.ncdc.noaa.gov/maps/ncei}.
 }
 \details{
 Note the following units for the main variables:

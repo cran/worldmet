@@ -6,7 +6,9 @@
 \alias{worldmet-package}
 \title{worldmet: Import Surface Meteorological Data from NOAA Integrated Surface Database (ISD)}
 \description{
-Functions to import data from more than 30,000 surface meteorological sites around the world managed by the National Oceanic and Atmospheric Administration (NOAA) Integrated Surface Database (ISD).
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
+Functions to import data from more than 30,000 surface meteorological sites around the world managed by the National Oceanic and Atmospheric Administration (NOAA) Integrated Surface Database (ISD, see \url{https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database}).
 }
 \details{
 This package contains functions to import surface meteorological
@@ -21,14 +23,16 @@ These data work well with the \code{openair} package that has been developed to
 analyse air pollution data.
 }
 \references{
-Search for NOAA ISD for more information.
+For general information of the ISD see
+\url{https://www.ncei.noaa.gov/products/land-based-station/integrated-surface-database}
+and the map here \url{https://gis.ncdc.noaa.gov/maps/ncei}.
 }
 \seealso{
-See \url{https://github.com/davidcarslaw/openair} for information on the
+See \url{https://github.com/openair-project/openair} for information on the
 related \code{openair} package.
 }
 \author{
-\strong{Maintainer}: David Carslaw \email{david.carslaw@york.ac.uk}
+\strong{Maintainer}: David Carslaw \email{david.carslaw@york.ac.uk} (\href{https://orcid.org/0000-0003-0991-950X}{ORCID})
 
 }
 \keyword{internal}

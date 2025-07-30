@@ -1,8 +1,28 @@
+# worldmet 0.10.0
+
+## New Features 
+
+- Parallel importing of NOAA data is now powered by `{mirai}`. This reduces the number of dependencies of `{worldmet}`, and also allows users to be more flexible with how parallel processing is achieved.
+
+    - Due to this change, users are recommended to set `mirai::daemons()` themselves. `n.core` will stil work for back-compatibility, but will give a once-per-session warning.
+
+- `getMeta()` has gained the `crs` argument to search NOAA ISD stations by coordinates other than latitude and longitude.
+
+- Added `importNOAALite()` to access the ISDLite filestore.
+
+- Added the `importNOAA(source=)` argument to import ISD data from different file stores. This option can be useful if one of the file stores is not available for whatever reason.
+
+- All error and warning messages are now powered by `{cli}` and are more informative.
+
 # worldmet 0.9.9
 
 ## New Features
 
 - The `quiet` argument of `importNOAA()` now also toggles the progress bar.
+
+## New Features
+
+- `getMeta()` has gained the `crs` argument, which allows `getMeta(lat =, lon =)` to be defined using other coordinate systems.
 
 ## Bug Fixes
 
@@ -89,7 +109,7 @@ without having to `library(worldmet)`.
 
 - query live meta data when using `getMeta()`
 - parallel processing for sites and years
-- use `read_csv()` for meta data (`read.csv()` seems very slow in R 3.4.3)
+- use `readr::read_csv()` for meta data (`read.csv()` seems very slow in R 3.4.3)
 
 ## Bug Fixes
 

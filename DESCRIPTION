@@ -2,10 +2,13 @@ Type: Package
 Package: worldmet
 Title: Import Surface Meteorological Data from NOAA Integrated Surface
         Database (ISD)
-Version: 0.9.9
-Authors@R: 
+Version: 0.10.0
+Authors@R: c(
     person("David", "Carslaw", , "david.carslaw@york.ac.uk", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-0991-950X"))
+           comment = c(ORCID = "0000-0003-0991-950X")),
+    person("Jack", "Davison", , "jack.davison@ricardo.com", role = "aut",
+           comment = c(ORCID = "0000-0003-2653-6615"))
+  )
 Maintainer: David Carslaw <david.carslaw@york.ac.uk>
 Description: Functions to import data from more than 30,000 surface
     meteorological sites around the world managed by the National Oceanic
@@ -16,10 +19,10 @@ License: MIT + file LICENSE
 URL: https://openair-project.github.io/worldmet/,
         https://github.com/openair-project/worldmet
 BugReports: https://github.com/openair-project/worldmet/issues
-Depends: R (>= 3.2.0)
-Imports: doParallel, dplyr, foreach, leaflet, magrittr, openair,
-        parallel, purrr (>= 1.0.0), readr, tibble, tidyr
-Suggests: knitr, rmarkdown
+Depends: R (>= 4.1.0)
+Imports: cli, dplyr, leaflet, openair, purrr (>= 1.1.0), readr, rlang,
+        sf, tidyr
+Suggests: carrier, knitr, mirai, rmarkdown
 ByteCompile: true
 Config/Needs/website: openair-project/openairpkgdown
 Encoding: UTF-8
@@ -28,7 +31,9 @@ LazyData: true
 LazyLoad: true
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-01-14 08:34:53 UTC; davidcarslaw
-Author: David Carslaw [aut, cre] (<https://orcid.org/0000-0003-0991-950X>)
+Packaged: 2025-07-30 10:09:12 UTC; JD38
+Author: David Carslaw [aut, cre] (ORCID:
+    <https://orcid.org/0000-0003-0991-950X>),
+  Jack Davison [aut] (ORCID: <https://orcid.org/0000-0003-2653-6615>)
 Repository: CRAN
-Date/Publication: 2025-01-14 09:00:01 UTC
+Date/Publication: 2025-07-30 10:30:02 UTC

@@ -102,10 +102,11 @@
 #'   2000:2005`.
 #' @param hourly Should hourly means be calculated? The default is `TRUE`. If
 #'   `FALSE` then the raw data are returned.
-#' @param source The NOAA ISD datastore stores files in two formats; as
-#'   delimited CSV files (`"delim"`) and as fixed width files (`"fwf"`).
-#'   [importNOAA()] defaults to `"delim"` but, if the delimited filestore is
-#'   down, users may wish to try `"fwf"` instead.
+#' @param source The NOAA ISD service stores files in two formats; as delimited
+#'   CSV files (`"delim"`) and as fixed width files (`"fwf"`). [importNOAA()]
+#'   defaults to `"delim"` but, if the delimited data store is down, users may
+#'   wish to try `"fwf"` instead. Both data sources should be identical to one
+#'   another.
 #' @param quiet If `FALSE`, print missing sites / years to the screen, and show
 #'   a progress bar if multiple sites are imported.
 #' @param path If a file path is provided, the data are saved as an rds file at
@@ -120,9 +121,7 @@
 #' @return Returns a data frame of surface observations. The data frame is
 #'   consistent for use with the `openair` package. Note that the data are
 #'   returned in GMT (UTC) time zone format. Users may wish to express the data
-#'   in other time zones, e.g., to merge with air pollution data. The
-#'   [lubridate][lubridate::lubridate-package] package is useful in this
-#'   respect.
+#'   in other time zones, e.g., to merge with air pollution data.
 #'
 #' @family NOAA ISD functions
 #' @author David Carslaw
@@ -227,10 +226,16 @@ importNOAA <- function(
   }
 
   if (is.null(dat) || nrow(dat) == 0) {
+    # get source not used
+    trysource <- c("fwf", "delim")
+    trysource <- trysource[trysource != source]
+
+    # message
     cli::cli_inform(
       c(
         "x" = "Specified {.field site}-{.field year} combinations do not exist.",
-        "i" = "Is the ISD service down? Check {.url https://www.ncei.noaa.gov/data/global-hourly/}."
+        "i" = "Is the ISD service down? Check {.url https://www.ncei.noaa.gov/data/global-hourly/}.",
+        "i" = 'Try {.code importNOAA(..., source = "{trysource}")} to access an alternative data store.'
       )
     )
     return()
@@ -282,14 +287,6 @@ importNOAA <- function(
 
 #' @noRd
 getDatDelim <- function(code, year, hourly) {
-  # function to supress timeAverage printing
-  # (can't see option to turn it off)
-  quiet <- function(x) {
-    sink(tempfile())
-    on.exit(sink())
-    invisible(force(x))
-  }
-
   ## location of data
   file.name <- paste0(
     "https://www.ncei.noaa.gov/data/global-hourly/access/",
@@ -647,11 +644,11 @@ getDatDelim <- function(code, year, hourly) {
   ## average to hourly
   if (hourly) {
     met_data <-
-      quiet(openair::timeAverage(
+      worldmet_time_average(
         met_data,
         avg.time = "hour",
         type = c("code", "station")
-      ))
+      )
   }
 
   ## add pwc back in
@@ -768,10 +765,6 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
       })
       cl <- as.numeric(cl)
 
-      #    miss <- which(cl > 8) # missing or obscured in some way
-      #   if (length(miss) > 0) {
-      #     cl[miss] <- NA
-      #   }
       miss <- which(cl == 99) # missing
 
       if (length(miss) > 0) {
@@ -1049,12 +1042,11 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
 
   # average to hourly
   if (hourly) {
-    dat <- openair::timeAverage(dat, avg.time = "hour")
-  }
-
-  # add pwc back in
-  if (PWC && hourly) {
-    dat <- merge(dat, pwc, by = "date", all = TRUE)
+    dat <- worldmet_time_average(
+      dat,
+      avg.time = "hour",
+      type = c("usaf", "wban")
+    )
   }
 
   # add precipitation
@@ -1086,7 +1078,7 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
   }
 
   # return other meta data
-  meta <- getMeta(returnMap = FALSE, plot = FALSE)
+  meta <- getMeta(returnMap = FALSE, plot = FALSE, end.year = "all")
   info <- meta[meta$code == code, ]
 
   dat$station <- as.character(info$station)

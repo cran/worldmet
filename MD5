@@ -1,11 +1,12 @@
-b5d326b3bcf2780e439106e8c3c6a4bd *DESCRIPTION
+583eeaa5998b28e480cb94b6d3022d22 *DESCRIPTION
 9588cc177bda933deec3b91f56102126 *LICENSE
 1208da613d2fe528c55864512a13aeb3 *NAMESPACE
-8148362e7d616755a247aa294344fdf9 *NEWS.md
+5447f2ad0075bcbf7e548b24c6b2e6ed *NEWS.md
 a7df2aeadcb6e086db9e3d8632d8f0e6 *R/exportADMS.R
 b83243e5c1443614158adc9f541a5cab *R/getMeta.R
-4ef45f771ae655e5417d320dfa6ff76a *R/importNOAA.R
-8feda754787b9ebc4216564253ec06f8 *R/importNOAAlite.R
+84c674ec7a3e19ecc6f06be45b9adf25 *R/importNOAA.R
+fb23800748adf5e51bf6b15d679b0180 *R/importNOAAlite.R
+ce48bf16b7781d05af37bad0c72170e5 *R/utils.R
 defd54d979cfaf98ddeb9efc2a67526e *R/weatherCodes.R
 090157fd76eb6defb56fec88560c76eb *R/worldmet-package.R
 7e87bf0d24387434fd376f5cbf2a3a10 *README.md
@@ -15,7 +16,7 @@ e49f4a7fd696f24adf64519f172e340a *data/weatherCodes.rda
 427b7647a3b5236725a7d1dfc8aeb8a6 *man/figures/logo.png
 df3b17feebbd41acd41030dd9d19a915 *man/getMeta.Rd
 76f052c1b198054b05b01032ab15545c *man/getMetaLive.Rd
-0c0da25ff17271e0419884e0b1138061 *man/importNOAA.Rd
-77f38e8b3513478dba1b0ca27e6e33dd *man/importNOAAlite.Rd
+43df337da5805fa67bd95ca312ff38c2 *man/importNOAA.Rd
+cfd4bf11121ec58c8060b3ef84ba13e3 *man/importNOAAlite.Rd
 7db62a5984ab5cdf9fda96af6881b553 *man/weatherCodes.Rd
 db5f2251d5b2069f20a75c296af401e2 *man/worldmet-package.Rd

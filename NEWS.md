@@ -1,3 +1,27 @@
+# worldmet 1.1.0
+
+## New Features
+
+- The styling of marker popups in `import_ghcn_stations()` and `import_isd_stations()` has been improved.
+
+- `import_ghcn_stations()` has gained `provider` in line with `import_isd_stations()`.
+
+- The default `provider` has changed from `OpenStreetMap` to `CartoDB.Voyager` due to ongoing issues with OSM in Leaflet (<https://github.com/rstudio/leaflet/issues/964>).
+
+- !BREAKING: The `lon` argument of `import_isd_stations()` has been renamed `lng` to match `import_ghcn_stations()`.
+
+## Bug Fixes
+
+- `import_ghcn_hourly()` and `import_isd_hourly()` will now always return a complete year of data - i.e., 8760 rows for a non-leap year. Missing values will be padded with `NA` values (#59).
+
+- `import_ghcn_inventory()` is now less sensitive to small changes in the format of NOAA's `ghcnh-inventory.txt` file.
+
+- `import_ghcn_hourly()` will now succeed even if certain columns are not present in the raw data files.
+
+- `import_ghcn_stations()` now correctly show the WMO ID (previously this was a duplicated GSN flag).
+
+- `import_ghcn_hourly()` now calculates `sky_cover` from the `sky_condition` column.
+
 # worldmet 1.0.0
 
 ## Dependency Changes

@@ -432,44 +432,52 @@ import_single_ghcn_site <- function(
   }
 
   # coalesce sky covers
-  if ("sky_cover_1" %in% names(data)) {
+  # coalesce sky covers
+  if ("sky_cover_layer_1" %in% names(data)) {
     data <- data |>
-      # split the code name away from the okta
       tidyr::separate_wider_delim(
-        cols = dplyr::matches("sky_cover_[123456789]\\b"),
+        cols = dplyr::matches("^sky_cover_layer_[123456789]$"),
         delim = ":",
-        names_sep = "",
-        names = c("code", ""),
+        names_sep = "_",
+        names = c("code", "okta"),
         too_few = "align_start"
       ) |>
-      # drop the code
       dplyr::select(
-        -dplyr::matches("sky_cover_[123456789]code")
+        -dplyr::matches("^sky_cover_layer_[123456789]_code$")
       ) |>
-      # coerce okta to numeric
       dplyr::mutate(
         dplyr::across(
-          dplyr::matches("sky_cover_[123456789]\\b"),
+          dplyr::matches("^sky_cover_layer_[123456789]_okta$"),
           as.numeric
         )
       )
 
-    # get pmax of sky cover columns - for ADMS
-    data$sky_cover <- pmax(
-      data$sky_cover_1,
-      data$sky_cover_2,
-      data$sky_cover_3,
-      na.rm = TRUE
-    )
+    # derive total sky cover from sky_condition column
+    # format is up to 3 values separated by ";"; take the first non-empty one
+    if ("sky_condition" %in% names(data)) {
+      sky_parts <- strsplit(data$sky_condition, ";", fixed = TRUE)
+      first_val <- vapply(
+        sky_parts,
+        function(p) {
+          non_empty <- p[nzchar(p)]
+          if (length(non_empty) == 0L) NA_character_ else non_empty[1L]
+        },
+        character(1L)
+      )
+      data$sky_cover <- as.integer(first_val)
+      data$sky_cover[
+        !is.na(data$sky_cover) & data$sky_cover == 9L
+      ] <- NA_integer_
+    }
 
     # get ceiling height
     data <-
       dplyr::mutate(
         data,
         sky_cover_baseht = dplyr::case_when(
-          .data$sky_cover_1 >= 5 ~ .data$sky_cover_baseht_1,
-          .data$sky_cover_2 >= 5 ~ .data$sky_cover_baseht_2,
-          .data$sky_cover_3 >= 5 ~ .data$sky_cover_baseht_3,
+          .data$sky_cover_layer_1_okta >= 5 ~ .data$sky_cover_layer_baseht_1,
+          .data$sky_cover_layer_2_okta >= 5 ~ .data$sky_cover_layer_baseht_2,
+          .data$sky_cover_layer_3_okta >= 5 ~ .data$sky_cover_layer_baseht_3,
           .default = NA
         )
       )
@@ -480,7 +488,7 @@ import_single_ghcn_site <- function(
         data,
         "sky_cover",
         "sky_cover_baseht",
-        .before = "sky_cover_1"
+        .before = "sky_cover_layer_1_okta"
       )
   }
 
@@ -497,51 +505,55 @@ import_single_ghcn_site <- function(
       ),
       # these variables are written observations/codes
       dplyr::across(
-        c(
-          "pres_wx_mw1",
-          "pres_wx_mw2",
-          "pres_wx_mw3",
-          "pres_wx_au1",
-          "pres_wx_au2",
-          "pres_wx_au3",
-          "pres_wx_aw1",
-          "pres_wx_aw2",
-          "pres_wx_aw3",
-          "remarks"
+        dplyr::any_of(
+          c(
+            "pres_wx_mw1",
+            "pres_wx_mw2",
+            "pres_wx_mw3",
+            "pres_wx_au1",
+            "pres_wx_au2",
+            "pres_wx_au3",
+            "pres_wx_aw1",
+            "pres_wx_aw2",
+            "pres_wx_aw3",
+            "remarks"
+          )
         ),
         as.character
       ),
       # these variables are all numeric
       dplyr::across(
-        c(
-          "latitude",
-          "longitude",
-          "elevation",
-          "temperature",
-          "dew_point_temperature",
-          "station_level_pressure",
-          "sea_level_pressure",
-          "wind_direction",
-          "wind_speed",
-          "wind_gust",
-          "precipitation",
-          "relative_humidity",
-          "wet_bulb_temperature",
-          "snow_depth",
-          "visibility",
-          "altimeter",
-          "pressure_3hr_change",
-          "sky_cover_baseht_1",
-          "sky_cover_baseht_2",
-          "sky_cover_baseht_3",
-          "precipitation_3_hour",
-          "precipitation_6_hour",
-          "precipitation_9_hour",
-          "precipitation_12_hour",
-          "precipitation_15_hour",
-          "precipitation_18_hour",
-          "precipitation_21_hour",
-          "precipitation_24_hour"
+        dplyr::any_of(
+          c(
+            "latitude",
+            "longitude",
+            "elevation",
+            "temperature",
+            "dew_point_temperature",
+            "station_level_pressure",
+            "sea_level_pressure",
+            "wind_direction",
+            "wind_speed",
+            "wind_gust",
+            "precipitation",
+            "relative_humidity",
+            "wet_bulb_temperature",
+            "snow_depth",
+            "visibility",
+            "altimeter",
+            "pressure_3hr_change",
+            "sky_cover_baseht_1",
+            "sky_cover_baseht_2",
+            "sky_cover_baseht_3",
+            "precipitation_3_hour",
+            "precipitation_6_hour",
+            "precipitation_9_hour",
+            "precipitation_12_hour",
+            "precipitation_15_hour",
+            "precipitation_18_hour",
+            "precipitation_21_hour",
+            "precipitation_24_hour"
+          )
         ),
         as.numeric
       )

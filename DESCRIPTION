@@ -1,7 +1,7 @@
 Type: Package
 Package: worldmet
 Title: Import Surface Meteorological Data from NOAA
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: c(
     person("David", "Carslaw", , "david.carslaw@york.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0991-950X")),
@@ -19,19 +19,19 @@ BugReports: https://github.com/openair-project/worldmet/issues
 Depends: R (>= 4.1.0)
 Imports: carrier, cli, dplyr, lifecycle, mirai, purrr (>= 1.1.0),
         readr, rlang, sf, tibble, tidyr
-Suggests: arrow, knitr, leaflet, rmarkdown
+Suggests: arrow, knitr, leaflet, rmarkdown, spelling
 ByteCompile: true
 Config/Needs/website: openair-project/openairpkgdown,openair
+Config/roxygen2/version: 8.1.1
 Encoding: UTF-8
 Language: en-GB
 LazyData: true
 LazyLoad: true
-Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-05-18 07:31:49 UTC; JD38
+Packaged: 2026-11-08 21:48:09 UTC; Jack
 Author: David Carslaw [aut, cre] (ORCID:
     <https://orcid.org/0000-0003-0991-950X>),
   Jack Davison [aut] (ORCID: <https://orcid.org/0000-0003-2653-6615>)
 Maintainer: David Carslaw <david.carslaw@york.ac.uk>
 Repository: CRAN
-Date/Publication: 2026-05-18 08:00:02 UTC
+Date/Publication: 2026-11-09 08:50:02 UTC

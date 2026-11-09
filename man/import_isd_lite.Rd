@@ -32,12 +32,12 @@ returned in GMT (UTC) time zone format. Users may wish to express the data
 in other time zones, e.g., to merge with air pollution data.
 }
 \description{
-This function is an alternative to \code{\link[=importNOAA]{importNOAA()}}, and provides access to the
-"Lite" format of the data. This a subset of the larger \code{\link[=importNOAA]{importNOAA()}} dataset
-featuring eight common climatological variables. As it assigns the nearest
-measurement to the "top of the hour" to the data, specific values are likely
-similar but different to those returned by \code{\link[=importNOAA]{importNOAA()}}. Read the
-\href{https://www.ncei.noaa.gov/pub/data/noaa/isd-lite/isd-lite-technical-document.pdf}{technical document}
+This function is an alternative to \code{\link[=import_isd_hourly]{import_isd_hourly()}}, and provides access
+to the "Lite" format of the data. This is a subset of the larger
+\code{\link[=import_isd_hourly]{import_isd_hourly()}} dataset featuring eight common climatological
+variables. As it assigns the nearest measurement to the "top of the hour" to
+the data, specific values are likely similar but different to those returned
+by \code{\link[=import_isd_hourly]{import_isd_hourly()}}. Read the \href{https://noaa-isd-pds.s3.amazonaws.com/isd-lite/isd-lite-technical-document.pdf}{technical document}
 for more information.
 }
 \details{
@@ -45,8 +45,8 @@ Note the following units for the main variables:
 
 \describe{
 
-\item{date}{Date/time in POSIXct format. **Note the time zone is UTC
-and may need to be adjusted to merge with other local data.}
+\item{date}{Date/time in POSIXct format. \strong{Note the time zone is UTC
+and may need to be adjusted to merge with other local data.}}
 
 \item{latitude}{Latitude in decimal degrees (-90 to 90).}
 
@@ -59,11 +59,11 @@ are west of the Greenwich Meridian.}
 
 \item{wd}{Wind direction in degrees. 90 is from the east.}
 
-\item{air_temp}{Air temperature in degrees Celcius.}
+\item{air_temp}{Air temperature in degrees Celsius.}
 
 \item{atmos_pres}{The sea level pressure in millibars.}
 
-\item{dew_point}{The dew point temperature in degrees Celcius.}
+\item{dew_point}{The dew point temperature in degrees Celsius.}
 
 \item{precip_6}{6-hour precipitation in mm.}
 
@@ -99,7 +99,7 @@ daemons than station-year combinations will lead to diminishing returns.
 mirai::daemons(4)
 
 # import lots of data - NB: no change in the import function!
-big_met <- import_ghcn_hourly(code = "UKI0000EGLL", year = 2010:2025)
+big_met <- import_ghcn_hourly(station = "UKI0000EGLL", year = 2010:2025)
 }\if{html}{\out{</div>}}
 }
 
@@ -110,8 +110,8 @@ heathrow_lite <- import_isd_lite(code = "037720-99999", year = 2025)
 }
 }
 \seealso{
-\code{\link[=getMeta]{getMeta()}} to obtain the codes based on various site search
-approaches.
+\code{\link[=import_isd_stations]{import_isd_stations()}} to obtain the codes based on various site
+search approaches.
 
 Other NOAA ISD functions:
 \code{\link[=import_isd_hourly]{import_isd_hourly()}},

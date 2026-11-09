@@ -180,7 +180,7 @@ import_ghcn_daily <- function(
     dplyr::bind_rows()
 
   # if null, leave early
-  if (is.null(data) || nrow(data) == 0L) {
+  if (nrow(data) == 0L) {
     cli::cli_warn("No data has been returned.")
     return(NULL)
   }
@@ -203,12 +203,17 @@ import_ghcn_daily <- function(
   if (!append_codes) {
     data <- dplyr::select(data, -dplyr::ends_with("attributes"))
   } else {
+    # attributes are "measurement,quality,source" but some elements (e.g., PRCP
+    # at US COOP stations) carry a fourth "observation time" piece, which is
+    # dropped
     data <- tidyr::separate_wider_delim(
       data,
       dplyr::ends_with("_attributes"),
       delim = ",",
       names_sep = "_",
-      names = c("mf", "qf", "sf")
+      names = c("mf", "qf", "sf"),
+      too_many = "drop",
+      too_few = "align_start"
     ) |>
       dplyr::rename_with(\(x) gsub("_attributes_", "_", x))
 
@@ -264,7 +269,7 @@ import_ghcn_daily <- function(
       nchar(names(data)) == 4 &
       !names(data) %in% c("snwd", "snow")
   ]
-  if (length(soil_names) > 1) {
+  if (length(soil_names) >= 1) {
     for (i in soil_names) {
       data[i] <- data[[i]] / 10
     }
@@ -273,13 +278,20 @@ import_ghcn_daily <- function(
   sx_names <- names(data)[
     startsWith(names(data), "sx")
   ]
-  if (length(sx_names) > 1) {
+  if (length(sx_names) >= 1) {
     for (i in sx_names) {
       data[i] <- data[[i]] / 10
     }
   }
 
   if (!extra) {
+    # keep core elements, each followed by any of its appended flag columns
+    core_elements <- c("prcp", "snow", "snwd", "tavg", "tmax", "tmin")
+    core_cols <- purrr::map(core_elements, \(x) {
+      c(x, paste0(x, c("_mf", "_qf", "_sf")))
+    }) |>
+      purrr::list_c()
+
     data <- dplyr::select(
       data,
       dplyr::any_of(c(
@@ -289,12 +301,7 @@ import_ghcn_daily <- function(
         "lat",
         "lng",
         "elev",
-        "prcp",
-        "snow",
-        "snwd",
-        "tavg",
-        "tmax",
-        "tmin"
+        core_cols
       ))
     )
   }

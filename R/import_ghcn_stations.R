@@ -11,7 +11,7 @@
 #'
 #' @param lat,lng,n_max Decimal latitude (`lat`) and longitude (`lng`) (or other
 #'   Y/X coordinate if using a different `crs`). If provided, the `n_max`
-#'   closest ISD stations to this coordinate will be returned.
+#'   closest GHCN stations to this coordinate will be returned.
 #'
 #' @param crs The coordinate reference system (CRS) of the data, passed to
 #'   [sf::st_crs()]. By default this is [EPSG:4326](https://epsg.io/4326), the
@@ -65,7 +65,7 @@ import_ghcn_stations <-
     crs = 4326,
     n_max = 10L,
     provider = c(
-      "Street Map" = "CartoDB.Voyager",
+      "Street Map" = "OpenStreetMap",
       "Satellite" = "Esri.WorldImagery"
     ),
     database = c("hourly", "daily"),
@@ -73,45 +73,64 @@ import_ghcn_stations <-
   ) {
     database <- rlang::arg_match(database, c("hourly", "daily"))
     return <- rlang::arg_match(return, c("table", "sf", "map"))
-    meta_url <-
-      switch(
-        database,
-        "hourly" = "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
-        "daily" = "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
-      )
 
-    meta <-
-      readr::read_fwf(
-        meta_url,
-        col_positions = readr::fwf_positions(
-          start = c(1, 13, 22, 32, 39, 42, 73, 77, 81),
-          end = c(11, 20, 30, 37, 40, 71, 75, 79, NA),
-          col_names = c(
-            "id",
-            "lat",
-            "lng",
-            "elevation",
-            "state",
-            "name",
-            "gsn_flag",
-            "hcn_crn_flag",
-            "wmo_id"
-          )
-        ),
-        col_types = list(
-          readr::col_character(),
-          readr::col_number(),
-          readr::col_number(),
-          readr::col_number(),
-          readr::col_character(),
-          readr::col_character(),
-          readr::col_character(),
-          readr::col_character(),
-          readr::col_character()
-        ),
-        na = c("-999.9", "-999", "-999.0", ""),
-        progress = FALSE
-      )
+    cache_key <- paste0("stations_", database)
+
+    if (exists(cache_key, envir = .worldmet_cache)) {
+      meta <- get(cache_key, envir = .worldmet_cache)
+    } else {
+      old_timeout <- options(timeout = 300)
+      on.exit(options(old_timeout), add = TRUE)
+
+      meta_url <-
+        switch(
+          database,
+          "hourly" = "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
+          "daily" = "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt"
+        )
+
+      tmp <- tempfile(fileext = ".txt")
+      on.exit(unlink(tmp), add = TRUE)
+      err <- download_retry(meta_url, tmp)
+      if (!is.null(err)) {
+        stop(err)
+      }
+
+      meta <-
+        readr::read_fwf(
+          tmp,
+          col_positions = readr::fwf_positions(
+            start = c(1, 13, 22, 32, 39, 42, 73, 77, 81),
+            end = c(11, 20, 30, 37, 40, 71, 75, 79, NA),
+            col_names = c(
+              "id",
+              "lat",
+              "lng",
+              "elevation",
+              "state",
+              "name",
+              "gsn_flag",
+              "hcn_crn_flag",
+              "wmo_id"
+            )
+          ),
+          col_types = list(
+            readr::col_character(),
+            readr::col_number(),
+            readr::col_number(),
+            readr::col_number(),
+            readr::col_character(),
+            readr::col_character(),
+            readr::col_character(),
+            readr::col_character(),
+            readr::col_character()
+          ),
+          na = c("-999.9", "-999", "-999.0", ""),
+          progress = FALSE
+        )
+
+      assign(cache_key, meta, envir = .worldmet_cache)
+    }
 
     meta <-
       dplyr::mutate(

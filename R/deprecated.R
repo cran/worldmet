@@ -18,7 +18,7 @@
 #'   coordinate if using a different `crs`). If provided, the `n` closest ISD
 #'   stations to this coordinate will be returned.
 #' @param end.year To help filter sites based on how recent the available data
-#'   are. `end.year` can be "current", "any" or a numeric year such as 2016, or
+#'   are. `end.year` can be "current", "all" or a numeric year such as 2016, or
 #'   a range of years e.g. 1990:2016 (which would select any site that had an
 #'   end date in that range. **By default only sites that have some data for the
 #'   current year are returned**.
@@ -43,12 +43,14 @@ getMeta <- function(
   n = 10,
   end.year = "current",
   provider = c(
-    "Street Map" = "CartoDB.Voyager",
+    "Street Map" = "OpenStreetMap",
     "Satellite" = "Esri.WorldImagery"
   ),
   plot = TRUE,
   returnMap = FALSE
 ) {
+  lifecycle::deprecate_warn("1.0.0", "getMeta()", "import_isd_stations()")
+
   if (plot || returnMap) {
     m <- import_isd_stations(
       site = site,
@@ -91,6 +93,11 @@ getMeta <- function(
 #' @rdname deprecated-isd
 #' @export
 getMetaLive <- function(...) {
+  lifecycle::deprecate_warn(
+    "1.0.0",
+    "getMetaLive()",
+    "import_isd_stations_live()"
+  )
   import_isd_stations_live(...)
 }
 
@@ -113,6 +120,13 @@ importNOAA <- function(
   path = NA,
   n.cores = NULL
 ) {
+  lifecycle::deprecate_warn(
+    "1.0.0",
+    "importNOAA()",
+    "import_isd_hourly()",
+    details = "Use `write_met()` in place of the `path` argument, and `mirai::daemons()` in place of `n.cores`."
+  )
+
   if (!is.null(n.cores)) {
     if (!rlang::is_integerish(n.cores)) {
       cli::cli_abort(
@@ -175,6 +189,13 @@ importNOAAlite <- function(
   quiet = FALSE,
   path = NA
 ) {
+  lifecycle::deprecate_warn(
+    "1.0.0",
+    "importNOAAlite()",
+    "import_isd_lite()",
+    details = "Use `write_met()` in place of the `path` argument."
+  )
+
   dat <-
     import_isd_lite(
       code = code,
@@ -228,6 +249,8 @@ exportADMS <- function(
   interp = FALSE,
   maxgap = 2
 ) {
+  lifecycle::deprecate_warn("1.0.0", "exportADMS()", "write_adms()")
+
   write_adms(
     x = dat,
     file = out,

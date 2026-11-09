@@ -1,3 +1,55 @@
+# worldmet 1.2.0
+
+## New Features
+
+- `import_ghcn_hourly()` will now re-attempt to download data up to three times if the first attempt fails. This makes it more robust to interrupted connections with NOAA's data store.
+
+- `import_ghcn_stations()` now caches data per session, speeding up data import.
+
+- The default `provider` has changed back to `OpenStreetMap` from `CartoDB.Voyager` as issues with OSM in Leaflet have been resolved.
+
+## Lifecycle Changes
+
+- The functions deprecated in worldmet 1.0.0 now give a deprecation warning when used: `getMeta()`, `getMetaLive()`, `importNOAA()`, `importNOAAlite()` and `exportADMS()`. They continue to work, but will be removed in a future release. Please use `import_isd_stations()`, `import_isd_stations_live()`, `import_isd_hourly()`, `import_isd_lite()` and `write_adms()` instead.
+
+## Bug Fixes
+
+This update contains a myriad of minor bug fixes. The following may change the values returned by, or written from, existing code.
+
+- `import_ghcn_hourly()` now calculates total cloud cover (`cl`/`sky_cover`) as the maximum of all cloud layer amounts, as documented and consistent with `import_isd_hourly()`. Previously, when `sky_condition` did not report a total, the lowest layer's amount was used instead, under-reporting cloud cover in roughly 10% of observations.
+
+- When `hourly = TRUE`, `import_ghcn_hourly()` and `import_isd_hourly()` no longer return duplicate hours for stations whose latitude, longitude or elevation change within the requested period.
+
+- `write_adms()` now writes every year present in the data. Previously only the year of the first row was written, and all other data were silently dropped.
+
+The following fixes are more minor and broadly make `{worldmet}` more robust to variations in returned data.
+
+- `import_ghcn_hourly()`:
+    - Combining many years of data no longer fails with column type conflicts (e.g., in `minute`, cloud layer heights or sub-hourly precipitation).
+    - Unwanted code columns are now dropped when all but one code type is requested in `codes`.
+    - Station metadata is now filled in for padded hours when `abbr_names = FALSE`.
+
+- `import_ghcn_daily()`:
+    - `append_codes = TRUE` no longer errors for stations whose attributes include an observation time (e.g., precipitation at many US stations), and now returns flag columns when `extra = FALSE`.
+    - Soil temperature columns (`sn**`/`sx**`) are now converted from tenths of degrees when only one such column is present.
+
+- `import_ghcn_monthly_temp()` now always reads data flag columns as character, rather than sometimes as logical (e.g., a "T" flag becoming `TRUE`).
+
+- `import_ghcn_monthly_prcp()` now filters the returned data by `year`. Previously `year` was ignored, and using it with `table = "inventory"` alone caused an error.
+
+- `import_isd_hourly()`:
+    - A site-year is no longer discarded when all of its 12-hour precipitation values are missing.
+    - It is no longer affected by an object called `pwc` in the global environment.
+    - With `source = "fwf"`: present weather (`pwc`) is now returned when `hourly = TRUE`; fields appearing in only one record of a file are no longer ignored; `precip` is no longer derived from row positions when `hourly = FALSE`; and station codes missing from the ISD metadata no longer cause an error.
+
+- `import_isd_lite()` now respects its `progress` argument, and no longer errors when a station code is missing from the ISD metadata.
+
+- `write_met()`:
+    - `ext = "delim"` now writes files, using the `delim` argument and a `.csv`, `.tsv` or `.txt` extension as appropriate. Previously no files were written.
+    - Empty `_.<ext>` files are no longer written when stations in the data do not share the same years.
+
+- `write_adms(interp = TRUE)` no longer exits early without writing a file when one of the interpolated variables is entirely missing.
+
 # worldmet 1.1.0
 
 ## New Features
@@ -38,7 +90,7 @@ The Global Historical Climate Network (GHCN) has officially superseded NOAA's In
 
 - Added `import_ghcn_stations()`, `import_ghcn_inventory()`, and `import_ghcn_countries()` to grant access to metadata for the GHCN.
 
-- Added `import_ghcn_hourly()`, `import_ghcn_daily()` and `import_ghcn_monthly()` to grant access to the GHCNh, GHCNd and CHCNm services.
+- Added `import_ghcn_hourly()`, `import_ghcn_daily()` and `import_ghcn_monthly()` to grant access to the GHCNh, GHCNd and GHCNm services.
 
 - Added `import_isd_stations()`, `import_isd_hourly()` and `import_isd_lite()` to provide a consistent API with the newly added GHCN functions.
 
@@ -100,7 +152,7 @@ Several functions have been deprecated and replaced due to the updated `worldmet
 
 - Parallel importing of NOAA data is now powered by `{mirai}`. This reduces the number of dependencies of `{worldmet}`, and also allows users to be more flexible with how parallel processing is achieved.
 
-    - Due to this change, users are recommended to set `mirai::daemons()` themselves. `n.core` will stil work for back-compatibility, but will give a once-per-session warning.
+    - Due to this change, users are recommended to set `mirai::daemons()` themselves. `n.core` will still work for back-compatibility, but will give a once-per-session warning.
 
 - `getMeta()` has gained the `crs` argument to search NOAA ISD stations by coordinates other than latitude and longitude.
 

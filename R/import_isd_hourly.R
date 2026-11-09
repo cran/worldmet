@@ -30,9 +30,9 @@
 #'
 #' \item{visibility}{The visibility in metres.}
 #'
-#' \item{air_temp}{Air temperature in degrees Celcius.}
+#' \item{air_temp}{Air temperature in degrees Celsius.}
 #'
-#' \item{dew_point}{The dew point temperature in degrees Celcius.}
+#' \item{dew_point}{The dew point temperature in degrees Celsius.}
 #'
 #' \item{atmos_pres}{The sea level pressure in millibars.}
 #'
@@ -42,7 +42,7 @@
 #'
 #' \item{cl}{Maximum of cl_1 to cl_3 cloud cover in Oktas (1-8).}
 #'
-#' \item{cl_1_height, ..., cl_3_height}{Height of the cloud base for each later
+#' \item{cl_1_height, ..., cl_3_height}{Height of the cloud base for each layer
 #' in metres.}
 #'
 #' \item{precip_12}{12-hour precipitation in mm. The sum of this column should
@@ -571,13 +571,12 @@ getDatDelim <- function(code, year, hourly) {
     met_data <-
       worldmet_time_average(
         met_data,
-        avg.time = "hour",
         type = c("code", "station")
       )
   }
 
   ## add pwc back in
-  if (exists("pwc")) {
+  if (exists("pwc", inherits = FALSE)) {
     met_data <- dplyr::left_join(met_data, pwc, by = "date")
   }
 
@@ -592,11 +591,6 @@ getDatDelim <- function(code, year, hourly) {
 
     ## id where there is 12 hour data
     id <- which(!is.na(met_data$precip_12))
-
-    if (length(id) == 0L) {
-      return()
-    }
-
     id <- id[id > 11] ## make sure we don't run off beginning
 
     for (i in seq_along(id)) {
@@ -643,7 +637,7 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
     # variables for precip amount
     dat[[out]] <- NA
 
-    if (length(id) > 1) {
+    if (length(id) > 0) {
       # location of begining of AA1 etc
 
       loc <- sapply(id, function(x) regexpr(field, add[x]))
@@ -679,7 +673,7 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
     dat[[out]] <- NA
     dat[[height]] <- NA
 
-    if (length(id) > 1) {
+    if (length(id) > 0) {
       # location of begining of GA1 etc
 
       loc <- sapply(id, function(x) regexpr(field, add[x]))
@@ -718,7 +712,7 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
     # fields that contain search string
     id <- grep(field, add)
 
-    if (length(id) > 1) {
+    if (length(id) > 0) {
       # name of output variable
       dat[["pwc"]] <- NA
 
@@ -759,10 +753,16 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
   )
 
   # Download file to temp directory
-  tmp <- paste0(tempdir(), basename(file.name))
+  gz_file <- tempfile(fileext = ".gz")
+  on.exit(unlink(gz_file), add = TRUE)
 
   # deal with any missing data, issue warning
-  bin <- try(utils::download.file(file.name, tmp, quiet = TRUE, mode = "wb"))
+  bin <- try(utils::download.file(
+    file.name,
+    gz_file,
+    quiet = TRUE,
+    mode = "wb"
+  ))
 
   if (inherits(bin, "try-error")) {
     return(NULL)
@@ -807,13 +807,13 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
 
   # mandatory fields, fast read
   dat <- readr::read_fwf(
-    tmp,
+    gz_file,
     readr::fwf_widths(column_widths),
     col_types = "ccciiiiicccccccicciccccccccccccccc"
   )
 
   # additional fields, variable length, need to read eveything
-  add <- readLines(tmp)
+  add <- readLines(gz_file)
 
   # Remove select columns from data frame
   dat <- dat[, c(2:8, 10:11, 13, 16, 19, 21, 25, 29, 31, 33)]
@@ -962,20 +962,24 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
     dates <- as.POSIXct(paste0(unique(pwc$date2), ":00:00"), tz = "GMT")
 
     pwc <- data.frame(date = dates, pwc = tmp$pwc)
-    PWC <- TRUE
   }
 
   # average to hourly
   if (hourly) {
     dat <- worldmet_time_average(
       dat,
-      avg.time = "hour",
       type = c("usaf", "wban")
     )
   }
 
-  # add precipitation
-  if (precip) {
+  # add pwc back in (dropped by averaging as it is character)
+  if (exists("pwc", inherits = FALSE)) {
+    dat <- dplyr::left_join(dat, pwc, by = "date")
+  }
+
+  # add precipitation - row offsets below assume one row per hour, so only do
+  # this for hourly data (consistent with the "delim" source)
+  if (precip && hourly) {
     # spread out precipitation across each hour
     # met data gives 12 hour total and every other 6 hour total
 
@@ -1003,13 +1007,14 @@ getDatFwf <- function(code, year, hourly, precip, PWC) {
   }
 
   # return other meta data
-  meta <- getMeta(returnMap = FALSE, plot = FALSE, end.year = "all")
+  meta <- import_isd_stations(end_year = "all", return = "table")
   info <- meta[meta$code == code, ]
 
-  dat$station <- as.character(info$station)
-  dat$latitude <- info$latitude
-  dat$longitude <- info$longitude
-  dat$elev <- info$`elev(m)`
+  # use [1] so that codes missing from the metadata give NA, not character(0)
+  dat$station <- as.character(info$station[1])
+  dat$latitude <- info$latitude[1]
+  dat$longitude <- info$longitude[1]
+  dat$elev <- info$`elev(m)`[1]
   dat$code <- code
 
   # rearrange columns, one to move to front

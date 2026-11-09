@@ -12,7 +12,7 @@ import_ghcn_stations(
   lng = NULL,
   crs = 4326,
   n_max = 10L,
-  provider = c(`Street Map` = "CartoDB.Voyager", Satellite = "Esri.WorldImagery"),
+  provider = c(`Street Map` = "OpenStreetMap", Satellite = "Esri.WorldImagery"),
   database = c("hourly", "daily"),
   return = c("table", "sf", "map")
 )
@@ -25,7 +25,7 @@ is searched as a sub-string case insensitively.}
 
 \item{lat, lng, n_max}{Decimal latitude (\code{lat}) and longitude (\code{lng}) (or other
 Y/X coordinate if using a different \code{crs}). If provided, the \code{n_max}
-closest ISD stations to this coordinate will be returned.}
+closest GHCN stations to this coordinate will be returned.}
 
 \item{crs}{The coordinate reference system (CRS) of the data, passed to
 \code{\link[sf:st_crs]{sf::st_crs()}}. By default this is \href{https://epsg.io/4326}{EPSG:4326}, the

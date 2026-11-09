@@ -104,6 +104,10 @@ import_ghcn_monthly_temp <- function(
           4,
           rep(c(5, 1, 1, 1), 12)
         )),
+        # id, year, element, then value + three flags for each month. Flags
+        # are read as character, as e.g. "T" could otherwise be guessed as
+        # logical
+        col_types = paste0("cic", strrep("dccc", 12)),
         na = "-9999",
         show_col_types = FALSE
       ) |>
@@ -116,8 +120,7 @@ import_ghcn_monthly_temp <- function(
         )
       ) |>
       dplyr::mutate(
-        dplyr::across(dplyr::ends_with("_value"), \(x) x / 100),
-        dplyr::across(dplyr::ends_with("_dmf|_qcf|_dsf"), as.character)
+        dplyr::across(dplyr::ends_with("_value"), \(x) x / 100)
       )
 
     out <- append(out, list(data = dat))
@@ -202,7 +205,7 @@ import_ghcn_monthly_prcp <- function(
       ) |>
       dplyr::bind_rows()
 
-    if (is.null(data) || nrow(data) == 0L) {
+    if (nrow(data) == 0L) {
       cli::cli_warn("No data has been returned.")
     } else {
       data <- data |>
@@ -214,6 +217,17 @@ import_ghcn_monthly_prcp <- function(
           .keep = "unused"
         ) |>
         dplyr::relocate("date", "year", "month", .before = "precip")
+
+      if (!is.null(year)) {
+        data <- dplyr::filter(
+          data,
+          as.numeric(format(.data$date, "%Y")) %in% !!year
+        )
+
+        if (nrow(data) == 0L) {
+          cli::cli_warn("No data has been returned. Check {.arg year}.")
+        }
+      }
     }
 
     out <- append(out, list(data = data))
@@ -245,18 +259,6 @@ import_ghcn_monthly_prcp <- function(
       )
 
     out <- append(out, list(inventory = inv))
-  }
-
-  if (!is.null(year)) {
-    data <- dplyr::filter(
-      data,
-      as.numeric(format(.data$date, "%Y")) %in% year
-    )
-
-    if (nrow(data) == 0L) {
-      cli::cli_warn("No data has been returned. Check {.arg year}.")
-      return(NULL)
-    }
   }
 
   return(out)

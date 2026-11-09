@@ -1,4 +1,4 @@
-#' Import station metadata for the Integrated Surface Databse
+#' Import station metadata for the Integrated Surface Database
 #'
 #' This function is primarily used to find a site code that can be used to
 #' access data using [import_isd_hourly()]. Sites searches of approximately
@@ -8,7 +8,7 @@
 #' @inheritParams import_ghcn_stations
 #'
 #' @param site A site name search string e.g. `site = "heathrow"`. The search
-#'   strings and be partial and can be upper or lower case e.g. `site =
+#'   strings can be partial and can be upper or lower case e.g. `site =
 #'   "HEATHR"`.
 #'
 #' @param country The country code. This is a two letter code. For a full
@@ -17,13 +17,14 @@
 #' @param state The state code. This is a two letter code.
 #'
 #' @param end_year To help filter sites based on how recent the available data
-#'   are. `end_year` can be "current", "any" or a numeric year such as 2016, or
+#'   are. `end_year` can be "current", "all" or a numeric year such as 2016, or
 #'   a range of years e.g. 1990:2016 (which would select any site that had an
 #'   end date in that range. **By default only sites that have some data for the
 #'   current year are returned**.
 #'
 #' @return A data frame is returned with all available meta data, mostly
-#'   importantly including a `code` that can be supplied to [importNOAA()]. If
+#'   importantly including a `code` that can be supplied to
+#'   [import_isd_hourly()]. If
 #'   latitude and longitude searches are made an approximate distance, `dist` in
 #'   km is also returned.
 #'
@@ -33,13 +34,13 @@
 #' @examples
 #' \dontrun{
 #' ## search for sites with name beijing
-#' getMeta(site = "beijing")
+#' import_isd_stations(site = "beijing")
 #' }
 #'
 #' \dontrun{
 #' ## search for near a specified lat/lng - near Beijing airport
 #' ## returns 'n_max' nearest by default
-#' getMeta(lat = 40, lng = 116.9)
+#' import_isd_stations(lat = 40, lng = 116.9)
 #' }
 import_isd_stations <- function(
   site = NULL,
@@ -51,7 +52,7 @@ import_isd_stations <- function(
   n_max = 10,
   end_year = "current",
   provider = c(
-    "Street Map" = "CartoDB.Voyager",
+    "Street Map" = "OpenStreetMap",
     "Satellite" = "Esri.WorldImagery"
   ),
   return = c("table", "sf", "map")

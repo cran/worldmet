@@ -2,7 +2,7 @@
 % Please edit documentation in R/import_isd_stations.R
 \name{import_isd_stations}
 \alias{import_isd_stations}
-\title{Import station metadata for the Integrated Surface Databse}
+\title{Import station metadata for the Integrated Surface Database}
 \usage{
 import_isd_stations(
   site = NULL,
@@ -13,13 +13,13 @@ import_isd_stations(
   crs = 4326,
   n_max = 10,
   end_year = "current",
-  provider = c(`Street Map` = "CartoDB.Voyager", Satellite = "Esri.WorldImagery"),
+  provider = c(`Street Map` = "OpenStreetMap", Satellite = "Esri.WorldImagery"),
   return = c("table", "sf", "map")
 )
 }
 \arguments{
 \item{site}{A site name search string e.g. \code{site = "heathrow"}. The search
-strings and be partial and can be upper or lower case e.g. \code{site = "HEATHR"}.}
+strings can be partial and can be upper or lower case e.g. \code{site = "HEATHR"}.}
 
 \item{country}{The country code. This is a two letter code. For a full
 listing see \url{https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv}.}
@@ -28,7 +28,7 @@ listing see \url{https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv}.}
 
 \item{lat, lng, n_max}{Decimal latitude (\code{lat}) and longitude (\code{lng}) (or other
 Y/X coordinate if using a different \code{crs}). If provided, the \code{n_max}
-closest ISD stations to this coordinate will be returned.}
+closest GHCN stations to this coordinate will be returned.}
 
 \item{crs}{The coordinate reference system (CRS) of the data, passed to
 \code{\link[sf:st_crs]{sf::st_crs()}}. By default this is \href{https://epsg.io/4326}{EPSG:4326}, the
@@ -38,7 +38,7 @@ non-lat/lng coordinate systems will be re-projected to \code{EPSG:4326} for
 making comparisons with the NOAA metadata.}
 
 \item{end_year}{To help filter sites based on how recent the available data
-are. \code{end_year} can be "current", "any" or a numeric year such as 2016, or
+are. \code{end_year} can be "current", "all" or a numeric year such as 2016, or
 a range of years e.g. 1990:2016 (which would select any site that had an
 end date in that range. \strong{By default only sites that have some data for the
 current year are returned}.}
@@ -61,7 +61,8 @@ following:
 }
 \value{
 A data frame is returned with all available meta data, mostly
-importantly including a \code{code} that can be supplied to \code{\link[=importNOAA]{importNOAA()}}. If
+importantly including a \code{code} that can be supplied to
+\code{\link[=import_isd_hourly]{import_isd_hourly()}}. If
 latitude and longitude searches are made an approximate distance, \code{dist} in
 km is also returned.
 }
@@ -74,13 +75,13 @@ nearest locations based on user-supplied latitude and longitude.
 \examples{
 \dontrun{
 ## search for sites with name beijing
-getMeta(site = "beijing")
+import_isd_stations(site = "beijing")
 }
 
 \dontrun{
 ## search for near a specified lat/lng - near Beijing airport
 ## returns 'n_max' nearest by default
-getMeta(lat = 40, lng = 116.9)
+import_isd_stations(lat = 40, lng = 116.9)
 }
 }
 \seealso{

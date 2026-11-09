@@ -116,7 +116,7 @@
 #'   mirai::daemons(4)
 #'
 #'   # import lots of data - NB: no change in the import function!
-#'   big_met <- import_ghcn_hourly(code = "UKI0000EGLL", year = 2010:2025)
+#'   big_met <- import_ghcn_hourly(station = "UKI0000EGLL", year = 2010:2025)
 #'   ```
 #'
 #' @author Jack Davison
@@ -175,10 +175,12 @@ import_ghcn_hourly <-
               append_codes = append_codes,
               codes = codes,
               potential_codes = potential_codes,
-              meta = meta
+              meta = meta,
+              download_retry = download_retry
             )
           },
           import_single_ghcn_site = import_single_ghcn_site,
+          download_retry = download_retry,
           year = year,
           source = source,
           append_codes = append_codes,
@@ -202,10 +204,12 @@ import_ghcn_hourly <-
               append_codes = append_codes,
               codes = codes,
               potential_codes = potential_codes,
-              meta = meta
+              meta = meta,
+              download_retry = download_retry
             )
           },
           import_single_ghcn_site = import_single_ghcn_site,
+          download_retry = download_retry,
           source = source,
           append_codes = append_codes,
           codes = codes,
@@ -220,7 +224,7 @@ import_ghcn_hourly <-
     data <- dplyr::bind_rows(data)
 
     # if null, leave early
-    if (is.null(data) || nrow(data) == 0L) {
+    if (nrow(data) == 0L) {
       cli::cli_warn("No data has been returned.")
       return(NULL)
     }
@@ -270,7 +274,6 @@ import_ghcn_hourly <-
         rn_data("wind_gust", "wg") |>
         rn_data("relative_humidity", "rh") |>
         rn_data("wet_bulb_temperature", "wet_bulb") |>
-        rn_data("wet_bulb_temperature", "wet_bulb") |>
         rn_data("pressure_3hr_change", "pres_03") |>
         dplyr::rename_with(\(x) gsub("precipitation", "precip", x)) |>
         dplyr::rename_with(\(x) gsub("pres_wx_", "wx_", x)) |>
@@ -285,8 +288,6 @@ import_ghcn_hourly <-
         dplyr::rename_with(\(x) gsub("_source_code", "_sc", x)) |>
         dplyr::rename_with(\(x) gsub("_source_id", "_si", x)) |>
         dplyr::rename_with(\(x) gsub("_source_station_id", "_si", x))
-
-      names(data)
     }
 
     # time average to hourly concentrations
@@ -302,7 +303,6 @@ import_ghcn_hourly <-
       # time average to hourly
       data <- worldmet_time_average(
         data,
-        avg.time = "hour",
         type = c("station_id", "station_name")
       )
 
@@ -318,6 +318,41 @@ import_ghcn_hourly <-
     return(data)
   }
 
+#' Download a URL to a file, retrying on partial transfers
+#' @noRd
+download_retry <- function(url, destfile, max_tries = 3) {
+  for (i in seq_len(max_tries)) {
+    partial <- FALSE
+    err <- NULL
+    withCallingHandlers(
+      tryCatch(
+        utils::download.file(
+          url,
+          destfile = destfile,
+          quiet = TRUE,
+          mode = "wb"
+        ),
+        error = function(e) err <<- e
+      ),
+      warning = function(w) {
+        if (grepl("partial|length.*!=", conditionMessage(w))) {
+          partial <<- TRUE
+          invokeRestart("muffleWarning")
+        }
+      }
+    )
+    if (!is.null(err)) {
+      return(err)
+    }
+    if (!partial) return(NULL)
+  }
+  simpleError(sprintf(
+    "Incomplete download after %d attempts: %s",
+    max_tries,
+    url
+  ))
+}
+
 #' Helper to import a single site
 #' @noRd
 import_single_ghcn_site <- function(
@@ -327,29 +362,32 @@ import_single_ghcn_site <- function(
   append_codes,
   codes,
   potential_codes,
-  meta
+  meta,
+  download_retry
 ) {
+  old_timeout <- options(timeout = 300)
+  on.exit(options(old_timeout), add = TRUE)
+
   if (is.null(year)) {
     per_station_url <-
       "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-station/GHCNh_INPUTCODE_por.psv"
 
     url <- sub("INPUTCODE", station, per_station_url)
 
-    data <- try(
-      suppressWarnings(
-        readr::read_delim(
-          url,
-          delim = "|",
-          progress = FALSE,
-          show_col_types = FALSE
-        )
-      ),
-      silent = TRUE
-    )
-
-    if (class(data)[1] == "try-error") {
+    tmp <- tempfile(fileext = ".psv")
+    on.exit(unlink(tmp), add = TRUE)
+    if (!is.null(download_retry(url, tmp))) {
       return(NULL)
     }
+
+    data <- suppressWarnings(
+      readr::read_delim(
+        tmp,
+        delim = "|",
+        progress = FALSE,
+        show_col_types = FALSE
+      )
+    )
 
     data <- data |>
       dplyr::slice_head(n = -1L) |>
@@ -380,35 +418,31 @@ import_single_ghcn_site <- function(
     url <- gsub("INPUTYEAR", as.character(year), url)
 
     if (source == "psv") {
-      data <- try(
-        suppressWarnings(
-          readr::read_delim(
-            url,
-            delim = "|",
-            name_repair = tolower,
-            show_col_types = FALSE,
-            progress = FALSE
-          )
-        ),
-        silent = TRUE
-      )
-
-      if (class(data)[1] == "try-error") {
+      tmp <- tempfile(fileext = ".psv")
+      on.exit(unlink(tmp), add = TRUE)
+      if (!is.null(download_retry(url, tmp))) {
         return(NULL)
       }
+
+      data <- suppressWarnings(
+        readr::read_delim(
+          tmp,
+          delim = "|",
+          name_repair = tolower,
+          show_col_types = FALSE,
+          progress = FALSE
+        )
+      )
 
       data <- dplyr::rename(data, station_id = "station")
     } else if (source == "parquet") {
-      data <- try(
-        suppressWarnings(
-          arrow::read_parquet(url)
-        ),
-        silent = TRUE
-      )
-
-      if (class(data)[1] == "try-error") {
+      tmp <- tempfile(fileext = ".parquet")
+      on.exit(unlink(tmp), add = TRUE)
+      if (!is.null(download_retry(url, tmp))) {
         return(NULL)
       }
+
+      data <- suppressWarnings(arrow::read_parquet(tmp))
 
       data <- data |>
         dplyr::rename_with(tolower) |>
@@ -432,7 +466,6 @@ import_single_ghcn_site <- function(
   }
 
   # coalesce sky covers
-  # coalesce sky covers
   if ("sky_cover_layer_1" %in% names(data)) {
     data <- data |>
       tidyr::separate_wider_delim(
@@ -452,23 +485,18 @@ import_single_ghcn_site <- function(
         )
       )
 
-    # derive total sky cover from sky_condition column
-    # format is up to 3 values separated by ";"; take the first non-empty one
-    if ("sky_condition" %in% names(data)) {
-      sky_parts <- strsplit(data$sky_condition, ";", fixed = TRUE)
-      first_val <- vapply(
-        sky_parts,
-        function(p) {
-          non_empty <- p[nzchar(p)]
-          if (length(non_empty) == 0L) NA_character_ else non_empty[1L]
-        },
-        character(1L)
-      )
-      data$sky_cover <- as.integer(first_val)
-      data$sky_cover[
-        !is.na(data$sky_cover) & data$sky_cover == 9L
-      ] <- NA_integer_
-    }
+    # total sky cover is the maximum of all layer amounts, consistent with
+    # import_isd_hourly(); amounts above 8 oktas (e.g., 9 = sky obscured) are
+    # not cloud amounts, so are ignored
+    okta_cols <- grep(
+      "^sky_cover_layer_[123456789]_okta$",
+      names(data),
+      value = TRUE
+    )
+    data$sky_cover <-
+      data[okta_cols] |>
+      purrr::map(\(x) replace(x, x > 8, NA)) |>
+      purrr::reduce(pmax, na.rm = TRUE)
 
     # get ceiling height
     data <-
@@ -516,15 +544,22 @@ import_single_ghcn_site <- function(
             "pres_wx_aw1",
             "pres_wx_aw2",
             "pres_wx_aw3",
-            "remarks"
+            "remarks",
+            "rem",
+            "sky_condition"
           )
         ),
+        as.character
+      ),
+      dplyr::across(
+        dplyr::matches("^sky_cover_summation_[0-9]$"),
         as.character
       ),
       # these variables are all numeric
       dplyr::across(
         dplyr::any_of(
           c(
+            "minute",
             "latitude",
             "longitude",
             "elevation",
@@ -542,9 +577,11 @@ import_single_ghcn_site <- function(
             "visibility",
             "altimeter",
             "pressure_3hr_change",
-            "sky_cover_baseht_1",
-            "sky_cover_baseht_2",
-            "sky_cover_baseht_3",
+            "ceiling_height",
+            "sky_condition_baseht",
+            "sky_cover_baseht",
+            "precipitation_5_minute",
+            "precipitation_15_minute",
             "precipitation_3_hour",
             "precipitation_6_hour",
             "precipitation_9_hour",
@@ -555,6 +592,10 @@ import_single_ghcn_site <- function(
             "precipitation_24_hour"
           )
         ),
+        as.numeric
+      ),
+      dplyr::across(
+        dplyr::matches("^sky_cover_(layer|summation)_baseht_[0-9]$"),
         as.numeric
       )
     )
@@ -567,7 +608,7 @@ import_single_ghcn_site <- function(
     codes_to_drop <- potential_codes
   }
 
-  if (length(codes_to_drop) > 1L) {
+  if (length(codes_to_drop) >= 1L) {
     # sometimes its source_id, sometimes its source_station_id
     if ("source_id" %in% codes_to_drop) {
       codes_to_drop <- c(codes_to_drop, "source_station_id")

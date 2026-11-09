@@ -16,7 +16,7 @@ getMeta(
   state = NULL,
   n = 10,
   end.year = "current",
-  provider = c(`Street Map` = "CartoDB.Voyager", Satellite = "Esri.WorldImagery"),
+  provider = c(`Street Map` = "OpenStreetMap", Satellite = "Esri.WorldImagery"),
   plot = TRUE,
   returnMap = FALSE
 )
@@ -37,7 +37,7 @@ importNOAAlite(code = "037720-99999", year = 2025, quiet = FALSE, path = NA)
 }
 \arguments{
 \item{site}{A site name search string e.g. \code{site = "heathrow"}. The search
-strings and be partial and can be upper or lower case e.g. \code{site = "HEATHR"}.}
+strings can be partial and can be upper or lower case e.g. \code{site = "HEATHR"}.}
 
 \item{lat, lon, n}{Decimal latitude (\code{lat}) and longitude (\code{lon}) (or other Y/X
 coordinate if using a different \code{crs}). If provided, the \code{n} closest ISD
@@ -56,7 +56,7 @@ listing see \url{https://www.ncei.noaa.gov/pub/data/noaa/isd-history.csv}.}
 \item{state}{The state code. This is a two letter code.}
 
 \item{end.year}{To help filter sites based on how recent the available data
-are. \code{end.year} can be "current", "any" or a numeric year such as 2016, or
+are. \code{end.year} can be "current", "all" or a numeric year such as 2016, or
 a range of years e.g. 1990:2016 (which would select any site that had an
 end date in that range. \strong{By default only sites that have some data for the
 current year are returned}.}
